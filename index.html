@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>2026학년도 3학년 영어 수행평가 결과 조회</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+      background: #f4f6f9;
+      margin: 0;
+      padding: 20px 10px;
+      color: #333;
+    }
+    .container {
+      max-width: 420px;
+      margin: 0 auto;
+      background: #ffffff;
+      padding: 24px 20px;
+      border-radius: 14px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+    }
+    h2 {
+      text-align: center;
+      color: #1a73e8;
+      margin-top: 0;
+      margin-bottom: 20px;
+      font-size: 20px;
+    }
+    .form-group {
+      margin-bottom: 15px;
+    }
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: #495057;
+    }
+    input, select {
+      width: 100%;
+      padding: 11px;
+      border: 1px solid #ced4da;
+      border-radius: 8px;
+      box-sizing: border-box;
+      font-size: 15px;
+      outline: none;
+    }
+    input:focus, select:focus {
+      border-color: #1a73e8;
+    }
+    button {
+      width: 100%;
+      padding: 13px;
+      background: #1a73e8;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    button:disabled {
+      background: #a8c7fa;
+      cursor: not-allowed;
+    }
+    .score-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+    }
+    .score-table th, .score-table td {
+      border: 1px solid #e9ecef;
+      padding: 10px;
+      text-align: center;
+      font-size: 14px;
+    }
+    .score-table th {
+      background: #f8f9fa;
+      color: #495057;
+    }
+    .total-row {
+      background: #e8f0fe;
+      font-weight: bold;
+      color: #174ea6;
+    }
+    .confirm-box {
+      margin-top: 20px;
+      padding: 15px;
+      background: #e6f4ea;
+      border: 1px solid #b7e1cd;
+      border-radius: 8px;
+      text-align: center;
+      color: #137333;
+      font-weight: 600;
+      font-size: 14px;
+    }
+    .hidden {
+      display: none;
+    }
+    .error-msg {
+      color: #d93025;
+      font-size: 13px;
+      margin-top: 12px;
+      text-align: center;
+      font-weight: 500;
+    }
+    .notice {
+      font-size: 12px;
+      color: #6c757d;
+      margin-top: 4px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container" id="loginCard">
+  <h2>수행평가 결과 조회</h2>
+  
+  <div class="form-group">
+    <label>학년-반</label>
+    <select id="classInfo">
+      <option value="03-01">3학년 1반 (03-01)</option>
+      <option value="03-02">3학년 2반 (03-02)</option>
+      <option value="03-03">3학년 3반 (03-03)</option>
+      <option value="03-04">3학년 4반 (03-04)</option>
+    </select>
+  </div>
+
+  <div class="form-group">
+    <label>출석번호</label>
+    <input type="number" id="number" placeholder="번호 입력 (예: 5)">
+  </div>
+
+  <div class="form-group">
+    <label>이름</label>
+    <input type="text" id="name" placeholder="학생 이름">
+  </div>
+
+  <div class="form-group">
+    <label>비밀번호 (부여받은 6자리 난수)</label>
+    <input type="password" id="password" placeholder="난수 입력">
+    <div class="notice">선생님께 안내받은 난수 번호를 입력하세요.</div>
+  </div>
+
+  <button id="lookupBtn" onclick="lookupScore()">성적 조회하기</button>
+  <div id="errorMsg" class="error-msg"></div>
+</div>
+
+<div class="container hidden" id="resultCard">
+  <h2>성적 확인서</h2>
+  <p style="text-align: center; font-weight: bold; font-size: 16px; margin-bottom: 15px;" id="studentInfo"></p>
+  
+  <table class="score-table">
+    <tr><th>평가 영역</th><th>점수</th></tr>
+    <tr><td>활동지 (5점)</td><td id="s_act">-</td></tr>
+    <tr><td>한국문화탐구하기 (5점)</td><td id="s_exp">-</td></tr>
+    <tr><td>한국문화소개글쓰기 (5점)</td><td id="s_wri">-</td></tr>
+    <tr><td>ClassPoint (5점)</td><td id="s_cp">-</td></tr>
+    <tr><td>Speaking (10점)</td><td id="s_spk">-</td></tr>
+    <tr class="total-row"><td>총점 (30점 만점)</td><td id="s_total">-</td></tr>
+  </table>
+
+  <div id="confirmArea" style="margin-top: 22px;">
+    <button id="confirmBtn" style="background: #34a853;" onclick="confirmScore()">위 점수를 확인하였습니다 (서명)</button>
+  </div>
+
+  <div id="confirmedBox" class="confirm-box hidden">
+    ✓ 확인이 정상적으로 완료되었습니다.<br>
+    <span id="confirmTime" style="font-size: 12px; font-weight: normal;"></span>
+  </div>
+</div>
+
+<script>
+  // [필수] 3단계에서 복사한 구글 Apps Script 웹 앱 URL을 아래 따옴표 안에 넣어주세요!
+  const SCRIPT_URL = "여기에_아까_복사한_웹앱_URL을_붙여넣으세요";
+
+  let studentSession = null;
+
+  async function lookupScore() {
+    const classInfo = document.getElementById("classInfo").value;
+    const number = document.getElementById("number").value.trim();
+    const name = document.getElementById("name").value.trim();
+    const password = document.getElementById("password").value.trim();
+    const errorMsg = document.getElementById("errorMsg");
+    const btn = document.getElementById("lookupBtn");
+
+    if(!classInfo || !number || !name || !password) {
+      errorMsg.textContent = "모든 항목을 빠짐없이 입력해주세요.";
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = "조회 중입니다...";
+    errorMsg.textContent = "";
+
+    try {
+      const response = await fetch(SCRIPT_URL, {
+        method: "POST",
+        body: JSON.stringify({ action: "login", classInfo, number, name, password })
+      });
+      const res = await response.json();
+
+      if(res.status === "success") {
+        studentSession = { classInfo, number, name, password };
+        document.getElementById("loginCard").classList.add("hidden");
+        document.getElementById("resultCard").classList.remove("hidden");
+        
+        document.getElementById("studentInfo").textContent = `${res.score.classInfo} ${res.score.number} ${res.score.name}`;
+        document.getElementById("s_act").textContent = res.score.activity || "0";
+        document.getElementById("s_exp").textContent = res.score.exploration || "0";
+        document.getElementById("s_wri").textContent = res.score.writing || "0";
+        document.getElementById("s_cp").textContent = res.score.classPoint || "0";
+        document.getElementById("s_spk").textContent = res.score.speaking || "0";
+        document.getElementById("s_total").textContent = res.score.total || "0";
+
+        if(res.score.confirmed) {
+          showConfirmed(res.score.confirmDate);
+        }
+      } else {
+        errorMsg.textContent = res.message;
+      }
+    } catch(err) {
+      errorMsg.textContent = "서버 통신 오류가 발생했습니다. 잠시 후 다시 시도해주세요.";
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "성적 조회하기";
+    }
+  }
+
+  async function confirmScore() {
+    const btn = document.getElementById("confirmBtn");
+    btn.disabled = true;
+    btn.textContent = "확인 처리 중...";
+
+    try {
+      const response = await fetch(SCRIPT_URL, {
+        method: "POST",
+        body: JSON.stringify({ action: "confirm", ...studentSession })
+      });
+      const res = await response.json();
+      if(res.status === "success") {
+        showConfirmed(res.confirmDate);
+      } else {
+        alert("확인 처리에 실패했습니다: " + res.message);
+        btn.disabled = false;
+        btn.textContent = "위 점수를 확인하였습니다 (서명)";
+      }
+    } catch(err) {
+      alert("오류가 발생했습니다. 네트워크를 확인해주세요.");
+      btn.disabled = false;
+      btn.textContent = "위 점수를 확인하였습니다 (서명)";
+    }
+  }
+
+  function showConfirmed(dateText) {
+    document.getElementById("confirmArea").classList.add("hidden");
+    const box = document.getElementById("confirmedBox");
+    box.classList.remove("hidden");
+    document.getElementById("confirmTime").textContent = `확인 완료 일시: ${dateText}`;
+  }
+</script>
+</body>
+</html>
