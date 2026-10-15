@@ -170,7 +170,7 @@
 
 <script>
   // [필수] 구글 Apps Script에서 새로 발급받은 웹 앱 URL을 아래 따옴표 안에 넣어주세요!
-  const SCRIPT_URL = "여기에_새로_복사한_웹앱_URL을_붙여넣으세요";
+  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxlgD-SlSQLvEpyINj4L79gw8ibLZ9XA9k9F-gT4Ef-luDlHLTA5M5jIY9Ln4uIF4Qbiw/exec";
 
   let studentSession = null;
 
